@@ -17,4 +17,5 @@ void WheelConfig::SetDefault() {
   configInverted = false;
   configUsePinZ = false;
   configResetEncoderPosition = false;
+  controlMode = PULSE_DIR;
 }

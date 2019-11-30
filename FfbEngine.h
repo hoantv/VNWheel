@@ -25,6 +25,7 @@
 #include <Arduino.h>
 #include "HIDReportType.h"
 #include "FfbReportHandler.h"
+#include "encoder.h"
 
 #define WHEEL_SAMPLE_RATE_MS     10
 #define WHEEL_RANGE             0x03B7
@@ -42,20 +43,31 @@ class FfbEngine {
     FfbEngine();
     ~FfbEngine();
     void SetFfb(FfbReportHandler* reporthandler);
-     FfbReportHandler* ffbReportHandler;
-//
-//    float FfbCos(float angle);
-//    float FfbSin(float angle); 
-//    int32_t ApplyGain(uint8_t value, uint8_t gain);
-//    int32_t ApplyEnvelope(volatile TEffectState&  effect, int32_t value);
-//    void ApplyDirection(volatile TEffectState&  effect, int32_t force, int32_t* axes);
-//    void CalcCondition(volatile TEffectState&  effect, int32_t * outValue, int32_t* inValue);       
-//    void FfbGetFeedbackValue(int16_t* axisPosition, int16_t* out);
+    FfbReportHandler* ffbReportHandler;
+    //
+    //    float FfbCos(float angle);
+    //    float FfbSin(float angle);
 
+
+    //    void ApplyDirection(volatile TEffectState&  effect, int32_t force, int32_t* axes);
+    //    void CalcCondition(volatile TEffectState&  effect, int32_t * outValue, int32_t* inValue);
+    //    void FfbGetFeedbackValue(int16_t* axisPosition, int16_t* out);
+
+    int32_t ForceCalculator(Encoder encoder);
     int32_t ConstantForceCalculator(volatile TEffectState&  effect);
     int32_t RampForceCalculator(volatile TEffectState&  effect);
-    int32_t ForceCalculator(int32_t encoderPosition);
-   
+    int32_t SquareForceCalculator(volatile TEffectState&  effect);
+    int32_t SinceForceCalculator(volatile TEffectState&  effect);
+    int32_t TriangleForceCalculator(volatile TEffectState&  effect);
+    int32_t SawtoothDownForceCalculator(volatile TEffectState&  effect);
+    int32_t SawtoothUpForceCalculator(volatile TEffectState&  effect);
+    int32_t ConditionForceCalculator(volatile TEffectState&  effect, int32_t inputForce, int32_t metric);
+    
+    int32_t ApplyGain(uint8_t value, uint8_t gain);
+    int32_t ApplyEnvelope(volatile TEffectState&  effect, int32_t value);
+    int32_t NormalizeRange(int32_t x, int32_t maxValue);
+
+
 };
 
 

@@ -22,15 +22,20 @@ class Encoder {
     uint32_t cPR;
     uint16_t maxAngle;
     int32_t maxValue;
-    int32_t  minValue;
+    int32_t  minValue;    
     
     bool inverted;
     bool usePinZ;
     bool z1stUp;
+    uint64_t lastEncoderTime;
     
     int32_t  currentPosition;
     int32_t  lastPosition;
-    int32_t correctPosition;
+    int32_t  correctPosition;    
+    int32_t  currentPositionVelocity;
+    int32_t  lastPositionVelocity;
+    int32_t  positionAcceleration;
+    int32_t  positionChange;
     void setConfig(WheelConfig wheelConfig);
     void initVariables(void);
     void updatePosition(void);

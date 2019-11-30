@@ -16,7 +16,7 @@ void Encoder::setConfig(WheelConfig wheelConfig) {
   resetPosition = wheelConfig.configResetEncoderPosition;
   maxValue = (float)maxAngle / 2 / 360 * cPR ;
   minValue = -maxValue;
-  usePinZ = wheelConfig.configUsePinZ;
+  usePinZ = wheelConfig.configUsePinZ;  
   initVariables();
 }
 
@@ -31,6 +31,8 @@ void Encoder::initVariables() {
   lastPinB = LOW;
   lastPinZ = LOW;
   z1stUp = false;
+  lastEncoderTime = (uint64_t) millis();
+  lastPositionVelocity = 0;
 }
 
 void  Encoder::updatePosition() {
@@ -48,8 +50,7 @@ void  Encoder::updatePosition() {
   if (currentPosition < minValue) {
     currentPosition = minValue;
   }
-  if (usePinZ) {
-    Serial.println("Z");
+  if (usePinZ) {    
     currentPinZ = digitalReadFast(encoderPinZ);
     if (z1stUp) {
       correctPosition = correctPosition; //found correct position
@@ -62,7 +63,14 @@ void  Encoder::updatePosition() {
   }
   lastPinA = currentPinA;
   lastPinB = currentPinB;
+  positionChange = currentPosition - lastPosition; 
+  uint64_t encoderCurrentTime = (uint64_t) millis();
+  currentPositionVelocity = positionChange/(encoderCurrentTime - lastEncoderTime);
+  positionAcceleration = (currentPositionVelocity - lastPositionVelocity)/(encoderCurrentTime - lastEncoderTime);
+  lastEncoderTime = encoderCurrentTime;
+  lastPositionVelocity = currentPositionVelocity;
   lastPosition = currentPosition;
+  
 }
 
 int8_t Encoder::parsePosition() { //4 state

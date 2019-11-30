@@ -7,4 +7,11 @@ The code use some library, file from other projects like:
 - ForceFeedback-core-library
 - kaskus forums
 - microchip forums
-It is not commercial project. If I have liciense issues, let me know if not allow. I will remove the unliciense file/functions.
+
+It has not tested yet.
+
+Usage:
+- pin0,1,2 for encoder
+- pin 5,6 for Pulse/dir; PWM+-
+- Read WheelConfig to choose correct with your hardware/setup
+
