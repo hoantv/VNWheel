@@ -16,7 +16,7 @@ void Encoder::setConfig(WheelConfig wheelConfig) {
   resetPosition = wheelConfig.configResetEncoderPosition;
   maxValue = (float)maxAngle / 2 / 360 * cPR ;
   minValue = -maxValue;
-  usePinZ = wheelConfig.configUsePinZ;  
+  usePinZ = wheelConfig.configUsePinZ;
   initVariables();
 }
 
@@ -50,27 +50,29 @@ void  Encoder::updatePosition() {
   if (currentPosition < minValue) {
     currentPosition = minValue;
   }
-  if (usePinZ) {    
+  if (usePinZ) {
     currentPinZ = digitalReadFast(encoderPinZ);
     if (z1stUp) {
       correctPosition = correctPosition; //found correct position
       z1stUp = true;
     } else {
       if (currentPosition > correctPosition * 0.05 || currentPosition < correctPosition * 0.05  ) {
-          currentPosition = correctPosition;
+        currentPosition = correctPosition;
       }
     }
   }
   lastPinA = currentPinA;
   lastPinB = currentPinB;
-  positionChange = currentPosition - lastPosition; 
+  positionChange = currentPosition - lastPosition;
   uint64_t encoderCurrentTime = (uint64_t) millis();
-  currentPositionVelocity = positionChange/(encoderCurrentTime - lastEncoderTime);
-  positionAcceleration = (currentPositionVelocity - lastPositionVelocity)/(encoderCurrentTime - lastEncoderTime);
-  lastEncoderTime = encoderCurrentTime;
-  lastPositionVelocity = currentPositionVelocity;
+  if (encoderCurrentTime > lastEncoderTime) {
+    currentPositionVelocity = positionChange / (encoderCurrentTime - lastEncoderTime);
+    positionAcceleration = (currentPositionVelocity - lastPositionVelocity) / (encoderCurrentTime - lastEncoderTime);
+    lastEncoderTime = encoderCurrentTime;
+    lastPositionVelocity = currentPositionVelocity;
+  }
   lastPosition = currentPosition;
-  
+
 }
 
 int8_t Encoder::parsePosition() { //4 state

@@ -7,7 +7,6 @@
 #define interruptA 0
 #define interruptB 1
 #define interruptZ 2
-#define interruptR 3
 
 #define encoderPinA 0
 #define encoderPinB 1
