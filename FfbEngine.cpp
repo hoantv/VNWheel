@@ -171,7 +171,7 @@ int32_t FfbEngine::ForceCalculator(Encoder encoder)
       switch (effect.effectType)
       {
         case USB_EFFECT_CONSTANT:
-//          ReportPrint(effect);
+          ReportPrint(effect);
           force += ConstantForceCalculator(effect);
 //          Serial.print("force ");
 //          Serial.println (force);
