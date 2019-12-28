@@ -4,6 +4,9 @@
 
 
 Encoder::Encoder() {
+  pinMode (encoderPinA, INPUT_PULLUP);
+  pinMode (encoderPinB, INPUT_PULLUP);
+  pinMode (encoderPinZ, INPUT_PULLUP);
 }
 
 Encoder::~Encoder() {
@@ -36,20 +39,8 @@ void Encoder::initVariables() {
 }
 
 void  Encoder::updatePosition() {
-  currentPinA = digitalReadFast(encoderPinA);
-  currentPinB = digitalReadFast(encoderPinB);
-  if (inverted == false) {
-    currentPosition += parsePosition();
-  }
-  else {
-    currentPosition += -parsePosition();
-  }
-  if (currentPosition > maxValue) {
-    currentPosition = maxValue;
-  }
-  if (currentPosition < minValue) {
-    currentPosition = minValue;
-  }
+
+    
   if (usePinZ) {
     currentPinZ = digitalReadFast(encoderPinZ);
     if (z1stUp) {
@@ -60,9 +51,7 @@ void  Encoder::updatePosition() {
         currentPosition = correctPosition;
       }
     }
-  }
-  lastPinA = currentPinA;
-  lastPinB = currentPinB;
+  } 
   positionChange = currentPosition - lastPosition;
   uint64_t encoderCurrentTime = (uint64_t) millis();
   if (encoderCurrentTime > lastEncoderTime) {
@@ -72,7 +61,6 @@ void  Encoder::updatePosition() {
     lastPositionVelocity = currentPositionVelocity;
   }
   lastPosition = currentPosition;
-
 }
 
 int8_t Encoder::parsePosition() { //4 state
@@ -93,3 +81,30 @@ int8_t Encoder::parsePosition() { //4 state
     if (!currentPinA && !currentPinB) return -1;
   }
 }
+
+//this code copy from Rotary Encoder of Matthias Hertel
+const int8_t KNOBDIR[] = {
+  0, -1,  1,  0,
+  1,  0,  0, -1,
+  -1,  0,  0,  1,
+0,  1, -1,  0  };
+
+void Encoder::tick(void)
+{
+  int sig1 = digitalReadFast(encoderPinA);
+  int sig2 = digitalReadFast(encoderPinB);
+  int8_t thisState = sig1 | (sig2 << 1);
+
+  if (oldState != thisState) {
+    currentPosition += KNOBDIR[thisState | (oldState<<2)];
+    
+//    if (thisState == LATCHSTATE) {
+//      _positionExt = _position >> 2;
+//      _positionExtTimePrev = _positionExtTime;
+//      _positionExtTime = millis();
+//    }
+    
+    oldState = thisState;
+  } // if
+//  currentPosition = constrain(currentPosition, minValue, maxValue); // remove in production
+} // tick()

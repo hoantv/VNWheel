@@ -234,7 +234,7 @@ typedef struct {
   uint8_t effectType; //
   int8_t offset;
   uint8_t gain, attackLevel, fadeLevel;
-  uint8_t magnitude;
+  int16_t magnitude;
   uint8_t enableAxis; // bits: 0=X, 1=Y, 2=DirectionEnable
   uint8_t directionX; // angle (0=0 .. 255=360deg)
   uint8_t directionY; // angle (0=0 .. 255=360deg)

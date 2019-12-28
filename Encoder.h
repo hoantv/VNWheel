@@ -39,6 +39,9 @@ class Encoder {
     void initVariables(void);
     void updatePosition(void);
 
+    
+    void tick(void);
+
   private:
    
     bool resetPosition;
@@ -49,6 +52,8 @@ class Encoder {
     volatile bool currentPinZ;
     volatile bool lastPinZ;
     int8_t parsePosition();
+
+    volatile int8_t oldState;
 
 
 };
