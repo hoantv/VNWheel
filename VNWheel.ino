@@ -1,89 +1,120 @@
 #include "FfbWheel.h"
 #include "Encoder.h"
 #include "DigitalWriteFast.h"
+#include "PID_v1.h"
 
 Wheel_ Wheel;
-#define BAUD_RATE 9600
+#define BAUD_RATE 115200
 
-#define PWM_POS 5
-#define PWM_NEG 6
-#define PULSE 10
-#define DIR 11
+#define PULSE 9
+#define DIR 10
 
 int32_t total_force = 0;
 int32_t last_total_force = 0;
 
-void setup() {
+double Setpoint, Input, Output;
+//double Kp=2, Ki=5, Kd=1;
+double Kp = 0.1 , Ki = 30 , Kd =  0;
+PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
+bool initialRun = false;
 
+
+#include "PWM.h"
+Pwm pwm;
+
+void setup() {
+  pinMode (PULSE, OUTPUT);
+  pinMode (DIR, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(interruptA), calculateEncoderPostion, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(interruptB), calculateEncoderPostion, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(interruptB), calculateEncoderPostion, CHANGE);  pwm.begin();
+  
+  pwm.setPWM(0);
   Wheel.begin();
+  Input = Wheel.encoder.currentPosition;
+  myPID.SetMode(AUTOMATIC);
+  myPID.SetSampleTime(0.01);
+  myPID.SetOutputLimits(-50, 50);
   Serial.begin(BAUD_RATE);
 }
 void loop() {
-  Wheel.encoder.updatePosition();
-  if (Wheel.encoder.minValue <= Wheel.encoder.currentPosition <= Wheel.encoder.maxValue) {
-    Wheel.xAxis(map(Wheel.encoder.currentPosition, Wheel.encoder.minValue , Wheel.encoder.maxValue, -32768, 32767));
+  if (initialRun == true ) {
+//    position control is not correctly, wheel runs over disired postion serveral times before stop
+    pwm.setPWM(10);
+    gotoPosition(Wheel.encoder.minValue);
+    gotoPosition(Wheel.encoder.maxValue);
+    gotoPosition( 0);
+    initialRun = false;
+    pwm.setPWM(0);
+  } else
+  {
+    // assign for re-test without initialRun
+    //        Serial.print("currentVelocity: ");
+    //        Serial.print(Wheel.encoder.maxVelocity);
+    //        Serial.print(" maxAcceleration: ");
+    //        Serial.println(Wheel.encoder.maxAcceleration);
+    //        Serial.print("   maxPositionChange: ");
+    //        Serial.println(Wheel.encoder.maxPositionChange);
+    Wheel.encoder.maxPositionChange = 1151;
+    Wheel.encoder.maxVelocity  = 72;
+    Wheel.encoder.maxAcceleration = 33;
+
+    Wheel.encoder.updatePosition();
+    if (Wheel.encoder.currentPosition > Wheel.encoder.maxValue) {
+      Wheel.xAxis(32767);
+    } else if (Wheel.encoder.currentPosition < Wheel.encoder.minValue) {
+      Wheel.xAxis(-32767);
+    } else {
+      Wheel.xAxis(map(Wheel.encoder.currentPosition, Wheel.encoder.minValue , Wheel.encoder.maxValue, -32768, 32767));
+    }
+
+    Wheel.RecvFfbReport();
     Wheel.write();
+    total_force = Wheel.ffbEngine.ForceCalculator(Wheel.encoder);
+    total_force = constrain(total_force, -255, 255);
+    //  Serial.println(Wheel.encoder.currentPosition);
+    //  when reach max and min wheel range, max force to prevent wheel goes over.
+    if (Wheel.encoder.currentPosition >= Wheel.encoder.maxValue) {
+      total_force = 255;
+    } else if (Wheel.encoder.currentPosition <= Wheel.encoder.minValue) {
+      total_force = -255;
+    }
   }
-  Wheel.RecvFfbReport();
+//  set total gain = 0.2 need replace by wheelConfig.totalGain.
+  pwm.setPWM(total_force * 0.2);
+}
 
-  total_force = Wheel.ffbEngine.ForceCalculator(Wheel.encoder);
-  Serial.println(total_force);
-  //  Serial.println(Wheel.encoder.currentPosition);
-  //  when reach max and min wheel range, max force to prevent wheel goes over.
-  if (Wheel.encoder.currentPosition >= Wheel.encoder.maxValue) {
-    total_force = 255;
-  } else if (Wheel.encoder.currentPosition <= Wheel.encoder.minValue) {
-    total_force = -255;
-  }
-  total_force = constrain(total_force, -255, 255);
-  total_force = total_force * 0.1;
-  if (last_total_force * total_force < 0) {
-    last_total_force = total_force;
-    total_force = 0;
-  } else {
-    last_total_force = total_force;
-  }
-  if (total_force == 0) { //maybe remove in production
-    digitalWrite(PULSE, 0);
-    digitalWrite(DIR, 0);
-  }
 
-  setPWM(total_force, Wheel.wheelConfig.controlMode);
+void gotoPosition(int32_t targetPosition) {
+  Setpoint = targetPosition;
+  while (Wheel.encoder.currentPosition != targetPosition) {
+    Setpoint = targetPosition;
+    Wheel.encoder.updatePosition();
+    Input = Wheel.encoder.currentPosition ;
+    myPID.Compute();
+    pwm.setPWM(-Output);
+    CalculateMaxSpeedAndMaxAcceleration();
+    Serial.print("Encoder Position: ");
+    Serial.print(Wheel.encoder.currentPosition);
+    Serial.print("  ");
+    Serial.print(Setpoint);
+    Serial.print("  ");
+    Serial.print("PWM: ");
+    Serial.println(Output);
+  }
+}
+
+void CalculateMaxSpeedAndMaxAcceleration() {
+  if (Wheel.encoder.maxVelocity < abs(Wheel.encoder.currentVelocity)) {
+    Wheel.encoder.maxVelocity = abs(Wheel.encoder.currentVelocity);
+  }
+  if (Wheel.encoder.maxAcceleration < abs(Wheel.encoder.currentAcceleration)) {
+    Wheel.encoder.maxAcceleration = abs(Wheel.encoder.currentAcceleration);
+  }
+  if (Wheel.encoder.maxPositionChange < abs(Wheel.encoder.positionChange)) {
+    Wheel.encoder.maxPositionChange = abs(Wheel.encoder.positionChange);
+  }
 }
 
 void calculateEncoderPostion() {
   Wheel.encoder.tick();
-}
-
-void setPWM(int32_t total_force, uint8_t ControlMode) {
-  switch (ControlMode) {
-    case PULSE_DIR:
-      //      if (total_force > 0) digitalWrite(DIR, HIGH);
-      //      else digitalWrite(DIR, LOW);
-      //      analogWrite(PULSE, abs(total_force));
-      //      break;
-      if (total_force > 0) {
-        analogWrite(PULSE, abs(total_force));
-      }
-      else {
-        analogWrite(DIR, abs(total_force));
-      }
-
-    case 'PWM_POS_NEG':
-      if (total_force > 0) {
-        //        analogWrite(PWM_POS, abs(total_force));
-        analogWrite(PULSE, abs(total_force));
-      }
-
-      else {
-        analogWrite(PWM_NEG, abs(total_force));
-        analogWrite(DIR, abs(total_force));
-      }
-      break;
-    default:
-      break;
-
-  }
 }

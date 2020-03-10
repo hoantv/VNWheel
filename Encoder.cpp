@@ -1,8 +1,6 @@
 #include "Encoder.h"
 #include "DigitalWriteFast.h"
 
-
-
 Encoder::Encoder() {
   pinMode (encoderPinA, INPUT_PULLUP);
   pinMode (encoderPinB, INPUT_PULLUP);
@@ -34,12 +32,13 @@ void Encoder::initVariables() {
   lastPinB = LOW;
   lastPinZ = LOW;
   z1stUp = false;
-  lastEncoderTime = (uint64_t) millis();
-  lastPositionVelocity = 0;
+  maxAcceleration = 0;
+  maxVelocity = 0;
+  lastEncoderTime = (uint32_t) millis();
+  lastVelocity = 0;
 }
 
 void  Encoder::updatePosition() {
-
     
   if (usePinZ) {
     currentPinZ = digitalReadFast(encoderPinZ);
@@ -53,12 +52,13 @@ void  Encoder::updatePosition() {
     }
   } 
   positionChange = currentPosition - lastPosition;
-  uint64_t encoderCurrentTime = (uint64_t) millis();
-  if (encoderCurrentTime > lastEncoderTime) {
-    currentPositionVelocity = positionChange / (encoderCurrentTime - lastEncoderTime);
-    positionAcceleration = (currentPositionVelocity - lastPositionVelocity) / (encoderCurrentTime - lastEncoderTime);
-    lastEncoderTime = encoderCurrentTime;
-    lastPositionVelocity = currentPositionVelocity;
+  uint32_t currentEncoderTime = (int32_t) millis();
+  int16_t diffTime = (int16_t)(currentEncoderTime - lastEncoderTime) ;
+  if (diffTime > 0) {
+    currentVelocity = positionChange / diffTime;
+    currentAcceleration = (abs(currentVelocity) - abs(lastVelocity)) / diffTime;
+    lastEncoderTime = currentEncoderTime;
+    lastVelocity = currentVelocity;
   }
   lastPosition = currentPosition;
 }
@@ -97,14 +97,6 @@ void Encoder::tick(void)
 
   if (oldState != thisState) {
     currentPosition += KNOBDIR[thisState | (oldState<<2)];
-    
-//    if (thisState == LATCHSTATE) {
-//      _positionExt = _position >> 2;
-//      _positionExtTimePrev = _positionExtTime;
-//      _positionExtTime = millis();
-//    }
-    
     oldState = thisState;
-  } // if
-//  currentPosition = constrain(currentPosition, minValue, maxValue); // remove in production
-} // tick()
+  } 
+} 

@@ -24,8 +24,15 @@
 #include "HIDReportType.h"
 #include "debug.h"
 
+const float cutoff_freq_damper   = 5.0;  //Cutoff frequency in Hz
+const float sampling_time_damper = 0.001; //Sampling time in seconds.
+IIR::ORDER  order  = IIR::ORDER::OD1; // Order (OD1 to OD4)
+Filter damperFilter(cutoff_freq_damper, sampling_time_damper, order);
+Filter interiaFilter(cutoff_freq_damper, sampling_time_damper, order);
+Filter frictionFilter(cutoff_freq_damper, sampling_time_damper, order);
 FfbEngine::FfbEngine() {
 }
+
 FfbEngine::~FfbEngine() {
 }
 
@@ -34,7 +41,9 @@ void FfbEngine::SetFfb(FfbReportHandler* reporthandler) {
 }
 
 int32_t FfbEngine::ConstantForceCalculator(volatile TEffectState&  effect) {
-  return (int32_t)effect.magnitude * effect.gain / 255;
+  float tempforce = (float)effect.magnitude * effect.gain / 255;
+  tempforce = map(tempforce, -10000, 10000, -255, 255);
+  return (int32_t) tempforce;
 }
 
 int32_t FfbEngine::RampForceCalculator(volatile TEffectState&  effect) {
@@ -67,8 +76,8 @@ int32_t FfbEngine::SinceForceCalculator(volatile TEffectState&  effect) {
   float phase = effect.phase;
   float timeTemp = effect.elapsedTime;
   float period = effect.period;
-
-  float angle = ((timeTemp / period) + (phase / 255) * period) * 2 * PI;
+  //  float angle = ((timeTemp / period) + (phase / 255) * period) * 2 * PI;
+  float angle = ((timeTemp / period) * 2 * PI + (float)(phase / 36000));
   float sine = sin(angle);
   float tempforce = sine * magnitude;
   tempforce += offset;
@@ -136,23 +145,41 @@ int32_t FfbEngine::SawtoothUpForceCalculator(volatile TEffectState&  effect) {
   return ApplyEnvelope(effect, tempforce);
 }
 
-int32_t FfbEngine::ConditionForceCalculator(volatile TEffectState&  effect, int32_t inputForce, int32_t metric) {
+int32_t FfbEngine::ConditionForceCalculator(volatile TEffectState&  effect, float metric) {
   float deadBand = effect.deadBand;
   float cpOffset = effect.cpOffset;
+  float negativeCoefficient = -effect.negativeCoefficient;
   float negativeSaturation = -effect.negativeSaturation;
   float positiveSaturation = effect.positiveSaturation;
-  float negativeCoefficient = effect.negativeCoefficient;
   float positiveCoefficient = effect.positiveCoefficient;
+  float  tempForce = 0;
   if (metric < (cpOffset - deadBand)) {
-    float tempForce = (metric - (cpOffset - deadBand)) * negativeCoefficient;
-    //    tempForce = ((cpOffset - deadBand) - metric) * negativeCoefficient;
-    return (int32_t) (tempForce < negativeSaturation ? negativeSaturation : tempForce);
+    //    float tempForce = (metric - (float)1.00*(cpOffset - deadBand)/10000) * negativeCoefficient;
+    tempForce = ((float)1.00 * (cpOffset - deadBand) / 10000 - metric) * negativeCoefficient;
+    //    tempForce = (tempForce < negativeSaturation ? negativeSaturation : tempForce); I dont know why negativeSaturation = 55536.00 after negativeSaturation = -effect.negativeSaturation;
+    tempForce =   (tempForce < (-effect.negativeCoefficient) ? (-effect.negativeCoefficient) : tempForce);
   }
   else if (metric > (cpOffset + deadBand)) {
-    float tempForce = (metric - (cpOffset + deadBand)) * positiveCoefficient;
-    return  (int32_t)(tempForce > positiveSaturation ? positiveSaturation : tempForce);
+    tempForce = (metric - (float)1.00 * (cpOffset + deadBand) / 10000) * positiveCoefficient;
+    tempForce = (tempForce > positiveSaturation ? positiveSaturation : tempForce);
   }
   else return 0;
+  tempForce = tempForce * effect.gain / 255;
+  switch (effect.effectType) {
+    case  USB_EFFECT_DAMPER:
+      tempForce = damperFilter.filterIn(tempForce);
+      break;
+    case USB_EFFECT_INERTIA:
+      tempForce = interiaFilter.filterIn(tempForce);
+      break;
+    case USB_EFFECT_FRICTION:
+      tempForce = frictionFilter.filterIn(tempForce);
+      break;
+    default:
+      break;
+  }
+  tempForce = map(tempForce, -10000, 10000, -255, 255);
+  return (int32_t) tempForce;
 }
 
 
@@ -168,14 +195,15 @@ int32_t FfbEngine::ForceCalculator(Encoder encoder)
 
     if ((effect.state & MEFFECTSTATE_PLAYING) && ((effect.elapsedTime <= effect.duration) || (effect.duration == USB_DURATION_INFINITE)) && !ffbReportHandler->devicePaused)
     {
-//          ReportPrint(effect);
+      //                ReportPrint(effect);
       switch (effect.effectType)
       {
         case USB_EFFECT_CONSTANT:
-//          ReportPrint(effect);
+          //          ReportPrint(effect);
+          //Serial.println( ConstantForceCalculator(effect));
           force += ConstantForceCalculator(effect);
-//          Serial.print("force ");
-//          Serial.println (force);
+          //          Serial.print("force ");
+          //          Serial.println (force);
           break;
         case USB_EFFECT_RAMP:
           force += RampForceCalculator(effect);
@@ -183,7 +211,7 @@ int32_t FfbEngine::ForceCalculator(Encoder encoder)
         case USB_EFFECT_SQUARE:
           break;
         case USB_EFFECT_SINE:
-          force +=  SinceForceCalculator(effect);
+          force +=  SinceForceCalculator(effect) * 0.1;
           break;
         case USB_EFFECT_TRIANGLE:
           force += TriangleForceCalculator(effect);
@@ -198,35 +226,61 @@ int32_t FfbEngine::ForceCalculator(Encoder encoder)
         case USB_EFFECT_SPRING:
           //          position
           //          ReportPrint(effect);
-          force += ConditionForceCalculator(effect, force, NormalizeRange(encoder.currentPosition, encoder.maxValue * 2) );
+          force += ConditionForceCalculator(effect, NormalizeRange(encoder.currentPosition, encoder.maxValue));
           //          Serial.print("force ");
           //          Serial.println (force);
           break;
         case USB_EFFECT_DAMPER:
-
+          force += ConditionForceCalculator(effect, NormalizeRange(encoder.currentVelocity, encoder.maxVelocity));
+          Serial.print("force1: ");
+          Serial.println(force);
           break;
         case USB_EFFECT_INERTIA:
+          if ( encoder.currentAcceleration < 0 and encoder.positionChange < 0) {
+            force += ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
+            Serial.print("force1: ");
+            Serial.print(force);
+            Serial.print(" currentAcceleration1: ");
+            Serial.println(encoder.currentAcceleration);
+          } else if ( encoder.currentAcceleration < 0 and encoder.positionChange > 0) {
+            force -= ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
+            Serial.print("force2: ");
+            Serial.print(force);
+            Serial.print(" currentAcceleration2: ");
+            Serial.println(encoder.currentAcceleration);
+          }
 
+
+          //          if (encoder.currentAcceleration < 0 and encoder.positionChange > 0 ) {
+          //            force += ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
+          //          }
+          //          else if (encoder.currentAcceleration < 0 and encoder.positionChange < 0) {
+          //            force -= ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
+          ////          }
+          //          Serial.print("force: ");
+          //          Serial.print(force);
+          //          Serial.print(" currentAcceleration: ");
+          //          Serial.println(encoder.currentAcceleration);
           break;
         case USB_EFFECT_FRICTION:
           //          position change
           //          ReportPrint(effect);
-          force += ConditionForceCalculator(effect, force, NormalizeRange(encoder.positionChange, encoder.maxValue * 2) );
-          //          Serial.println (force);
+          force += ConditionForceCalculator(effect, NormalizeRange(encoder.positionChange, encoder.maxPositionChange) );
+          //                    Serial.println (encoder.positionChange);
           break;
         case USB_EFFECT_CUSTOM:
           break;
       }
       ffbReportHandler->gEffectStates[id].elapsedTime = (uint64_t)millis()  - ffbReportHandler->gEffectStates[id].startTime;
-      
+
     }
   }
-   
+
   return constrain(force, -255, 255);
 }
 
-int32_t FfbEngine::NormalizeRange(int32_t x, int32_t wheelRange) {
-  return (int32_t)( (float) (x / wheelRange) * 255);
+float FfbEngine::NormalizeRange(int32_t x, int32_t maxValue) {
+  return (float)x * 1.00 / maxValue;
 }
 
 int32_t  FfbEngine::ApplyGain(uint8_t value, uint8_t gain)

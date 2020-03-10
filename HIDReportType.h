@@ -78,8 +78,8 @@ typedef struct
 { // FFB: Set Envelope Output Report
   uint8_t	reportId;	// =2
   uint8_t	effectBlockIndex;	// 1..40
-  uint8_t attackLevel;
-  uint8_t	fadeLevel;
+  uint16_t attackLevel;
+  uint16_t	fadeLevel;
   uint16_t	attackTime;	// ms
   uint16_t	fadeTime;	// ms
 } USB_FFBReport_SetEnvelope_Output_Data_t;
@@ -89,21 +89,21 @@ typedef struct
   uint8_t	reportId;	// =3
   uint8_t	effectBlockIndex;	// 1..40
   uint8_t	parameterBlockOffset;	// bits: 0..3=parameterBlockOffset, 4..5=instance1, 6..7=instance2
-  int8_t cpOffset;	// 0..255
-  int8_t	positiveCoefficient;	// -128..127
-  int8_t	negativeCoefficient;	// -128..127
-  uint8_t	positiveSaturation;	// -	128..127
-  uint8_t	negativeSaturation;	// -128..127
-  uint8_t	deadBand;	// 0..255
+  int16_t cpOffset;	// 0..255
+  int16_t	positiveCoefficient;	// -128..127
+  int16_t	negativeCoefficient;	// -128..127
+  uint16_t	positiveSaturation;	// -	128..127
+  uint16_t	negativeSaturation;	// -128..127
+  uint16_t	deadBand;	// 0..255
 } USB_FFBReport_SetCondition_Output_Data_t;
 
 typedef struct
 { // FFB: Set Periodic Output Report
   uint8_t	reportId;	// =4
   uint8_t	effectBlockIndex;	// 1..40
-  uint8_t magnitude;
-  int8_t	offset;
-  uint8_t	phase;	// 0..255 (=0..359, exp-2)
+  uint16_t magnitude;
+  int16_t	offset;
+  uint16_t	phase;	// 0..255 (=0..359, exp-2)
   uint16_t	period;	// 0..32767 ms
 } USB_FFBReport_SetPeriodic_Output_Data_t;
 
@@ -118,15 +118,15 @@ typedef struct
 { // FFB: Set RampForce Output Report
   uint8_t	reportId;	// =6
   uint8_t	effectBlockIndex;	// 1..40
-  int8_t startMagnitude;
-  int8_t	endMagnitude;
+  int16_t startMagnitude;
+  int16_t	endMagnitude;
 } USB_FFBReport_SetRampForce_Output_Data_t;
 
 typedef struct
 { // FFB: Set CustomForceData Output Report
   uint8_t	reportId;	// =7
   uint8_t	effectBlockIndex;	// 1..40
-  uint8_t dataOffset;
+  uint16_t dataOffset;
   int8_t	data[12];
 } USB_FFBReport_SetCustomForceData_Output_Data_t;
 
@@ -232,21 +232,22 @@ typedef struct
 typedef struct {
   volatile uint8_t state;  // see constants <MEffectState_*>
   uint8_t effectType; //
-  int8_t offset;
-  uint8_t gain, attackLevel, fadeLevel;
+  int16_t offset;
+  uint8_t gain;
+  int16_t attackLevel, fadeLevel;
   int16_t magnitude;
   uint8_t enableAxis; // bits: 0=X, 1=Y, 2=DirectionEnable
   uint8_t directionX; // angle (0=0 .. 255=360deg)
   uint8_t directionY; // angle (0=0 .. 255=360deg)
-  int8_t cpOffset; // -128..127
-  int8_t  positiveCoefficient; // -128..127
-  int8_t  negativeCoefficient; // -128..127
-  uint8_t positiveSaturation;  // -128..127
-  uint8_t negativeSaturation;  // -128..127
-  uint8_t deadBand;  // 0..255
-  uint8_t phase;  // 0..255 (=0..359, exp-2)
-  int8_t startMagnitude;
-  int8_t  endMagnitude;
+  int16_t cpOffset; // -128..127
+  int16_t  positiveCoefficient; // -128..127
+  int16_t  negativeCoefficient; // -128..127
+  uint16_t positiveSaturation;  // -128..127
+  uint16_t negativeSaturation;  // -128..127
+  uint16_t deadBand;  // 0..255
+  uint16_t phase;  // 0..255 (=0..359, exp-2)
+  int16_t startMagnitude;
+  int16_t  endMagnitude;
   uint16_t  period; // 0..32767 ms
   uint16_t duration, fadeTime, attackTime, elapsedTime;
   uint64_t startTime;

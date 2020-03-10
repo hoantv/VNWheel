@@ -24,6 +24,7 @@
 */
 
 #include "FfbReportHandler.h"
+#include "debug.h"
 FfbReportHandler::FfbReportHandler() {
   nextEID = 1;
   devicePaused = 0;
@@ -233,7 +234,8 @@ void FfbReportHandler::SetPeriodic(USB_FFBReport_SetPeriodic_Output_Data_t* data
 
 void FfbReportHandler::SetConstantForce(USB_FFBReport_SetConstantForce_Output_Data_t* data, volatile TEffectState* effect)
 {
-  effect->magnitude = data->magnitude;
+//  ReportPrint(*effect);
+  effect->magnitude = data->magnitude;  
 }
 
 void FfbReportHandler::SetRampForce(USB_FFBReport_SetRampForce_Output_Data_t* data, volatile TEffectState* effect)

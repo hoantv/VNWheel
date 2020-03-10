@@ -26,6 +26,7 @@
 #include "HIDReportType.h"
 #include "FfbReportHandler.h"
 #include "encoder.h"
+#include <filters.h>
 
 #define WHEEL_SAMPLE_RATE_MS     10
 #define WHEEL_RANGE             0x03B7
@@ -61,11 +62,14 @@ class FfbEngine {
     int32_t TriangleForceCalculator(volatile TEffectState&  effect);
     int32_t SawtoothDownForceCalculator(volatile TEffectState&  effect);
     int32_t SawtoothUpForceCalculator(volatile TEffectState&  effect);
-    int32_t ConditionForceCalculator(volatile TEffectState&  effect, int32_t inputForce, int32_t metric);
+    int32_t ConditionForceCalculator(volatile TEffectState&  effect, float metric);
     
     int32_t ApplyGain(uint8_t value, uint8_t gain);
-    int32_t ApplyEnvelope(volatile TEffectState&  effect, int32_t value);
-    int32_t NormalizeRange(int32_t x, int32_t maxValue);
+    int32_t ApplyEnvelope(volatile TEffectState&  effect, int32_t value);    
+    float NormalizeRange(int32_t x, int32_t maxValue);
+
+   
+    
 
 
 };

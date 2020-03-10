@@ -26,15 +26,18 @@ class Encoder {
     bool inverted;
     bool usePinZ;
     bool z1stUp;
-    uint64_t lastEncoderTime;
+    uint32_t lastEncoderTime;
     
     int32_t  currentPosition;
     int32_t  lastPosition;
     int32_t  correctPosition;    
-    int32_t  currentPositionVelocity;
-    int32_t  lastPositionVelocity;
-    int32_t  positionAcceleration;
+    int32_t  currentVelocity;
+    int32_t  lastVelocity;
+    int32_t  maxVelocity;
+    int32_t  currentAcceleration;
+    int32_t  maxAcceleration;
     int32_t  positionChange;
+    int32_t  maxPositionChange;
     void setConfig(WheelConfig wheelConfig);
     void initVariables(void);
     void updatePosition(void);
