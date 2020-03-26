@@ -26,6 +26,7 @@
 #include "HIDReportType.h"
 #include "FfbReportHandler.h"
 #include "encoder.h"
+#include "wheelConfig.h"
 #include <filters.h>
 
 #define WHEEL_SAMPLE_RATE_MS     10
@@ -44,7 +45,9 @@ class FfbEngine {
     FfbEngine();
     ~FfbEngine();
     void SetFfb(FfbReportHandler* reporthandler);
+    void SetGain(WheelConfig wheelconfig);
     FfbReportHandler* ffbReportHandler;
+    
     //
     //    float FfbCos(float angle);
     //    float FfbSin(float angle);
@@ -58,20 +61,28 @@ class FfbEngine {
     int32_t ConstantForceCalculator(volatile TEffectState&  effect);
     int32_t RampForceCalculator(volatile TEffectState&  effect);
     int32_t SquareForceCalculator(volatile TEffectState&  effect);
-    int32_t SinceForceCalculator(volatile TEffectState&  effect);
+    int32_t SinForceCalculator(volatile TEffectState&  effect);
     int32_t TriangleForceCalculator(volatile TEffectState&  effect);
     int32_t SawtoothDownForceCalculator(volatile TEffectState&  effect);
     int32_t SawtoothUpForceCalculator(volatile TEffectState&  effect);
     int32_t ConditionForceCalculator(volatile TEffectState&  effect, float metric);
-    
+
     int32_t ApplyGain(uint8_t value, uint8_t gain);
-    int32_t ApplyEnvelope(volatile TEffectState&  effect, int32_t value);    
+    int32_t ApplyEnvelope(volatile TEffectState&  effect, int32_t value);
     float NormalizeRange(int32_t x, int32_t maxValue);
-
-   
-    
-
-
+  private:
+    uint8_t constantGainConfig;
+    uint8_t rampGainConfig;
+    uint8_t squareGainConfig;
+    uint8_t sinGainConfig;
+    uint8_t triangleGainConfig;
+    uint8_t sawToothDownGainConfig;
+    uint8_t sawToothUpGainConfig;
+    uint8_t springGainConfig;
+    uint8_t damperGainConfig;
+    uint8_t inertiaGainConfig;
+    uint8_t frictionGainConfig;
+    uint8_t totalGainConfig;
 };
 
 

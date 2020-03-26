@@ -40,6 +40,20 @@ void FfbEngine::SetFfb(FfbReportHandler* reporthandler) {
   ffbReportHandler = reporthandler;
 }
 
+void FfbEngine::SetGain(WheelConfig wheelConfig) {
+  constantGainConfig = wheelConfig.constantGainConfig;
+  rampGainConfig = wheelConfig.rampGainConfig;
+  squareGainConfig = wheelConfig.squareGainConfig;
+  sinGainConfig = wheelConfig.sinGainConfig;
+  triangleGainConfig = wheelConfig.triangleGainConfig;
+  sawToothDownGainConfig = wheelConfig.sawToothDownGainConfig;
+  sawToothUpGainConfig = wheelConfig.sawToothUpGainConfig;
+  damperGainConfig = wheelConfig.damperGainConfig;
+  inertiaGainConfig = wheelConfig.inertiaGainConfig;
+  frictionGainConfig = wheelConfig.frictionGainConfig;
+  totalGainConfig = wheelConfig.totalGainConfig;
+}
+
 int32_t FfbEngine::ConstantForceCalculator(volatile TEffectState&  effect) {
   float tempforce = (float)effect.magnitude * effect.gain / 255;
   tempforce = map(tempforce, -10000, 10000, -255, 255);
@@ -70,7 +84,7 @@ int32_t FfbEngine::SquareForceCalculator(volatile TEffectState&  effect) {
 
 }
 
-int32_t FfbEngine::SinceForceCalculator(volatile TEffectState&  effect) {
+int32_t FfbEngine::SinForceCalculator(volatile TEffectState&  effect) {
   float offset = effect.offset * 2;
   float magnitude = effect.magnitude;
   float phase = effect.phase;
@@ -201,71 +215,48 @@ int32_t FfbEngine::ForceCalculator(Encoder encoder)
         case USB_EFFECT_CONSTANT:
           //          ReportPrint(effect);
           //Serial.println( ConstantForceCalculator(effect));
-          force += ConstantForceCalculator(effect);
+          force += ConstantForceCalculator(effect) * constantGainConfig;
           //          Serial.print("force ");
           //          Serial.println (force);
           break;
         case USB_EFFECT_RAMP:
-          force += RampForceCalculator(effect);
+          force += RampForceCalculator(effect) * rampGainConfig;
           break;
         case USB_EFFECT_SQUARE:
+          force += SquareForceCalculator(effect) * squareGainConfig;
           break;
         case USB_EFFECT_SINE:
-          force +=  SinceForceCalculator(effect) * 0.1;
+          force +=  SinForceCalculator(effect) * sinGainConfig;
           break;
         case USB_EFFECT_TRIANGLE:
-          force += TriangleForceCalculator(effect);
+          force += TriangleForceCalculator(effect) * triangleGainConfig;
           break;
         case USB_EFFECT_SAWTOOTHDOWN:
-          force += SawtoothDownForceCalculator(effect);
+          force += SawtoothDownForceCalculator(effect) * sawToothDownGainConfig;
 
           break;
         case USB_EFFECT_SAWTOOTHUP:
-          force += SawtoothUpForceCalculator(effect);
+          force += SawtoothUpForceCalculator(effect) * sawToothUpGainConfig;
           break;
         case USB_EFFECT_SPRING:
           //          position
           //          ReportPrint(effect);
-          force += ConditionForceCalculator(effect, NormalizeRange(encoder.currentPosition, encoder.maxValue));
-          //          Serial.print("force ");
-          //          Serial.println (force);
+          force += ConditionForceCalculator(effect, NormalizeRange(encoder.currentPosition, encoder.maxValue)) * springGainConfig;
           break;
         case USB_EFFECT_DAMPER:
-          force += ConditionForceCalculator(effect, NormalizeRange(encoder.currentVelocity, encoder.maxVelocity));
-          Serial.print("force1: ");
-          Serial.println(force);
+          force += ConditionForceCalculator(effect, NormalizeRange(encoder.currentVelocity, encoder.maxVelocity)) * damperGainConfig;
           break;
         case USB_EFFECT_INERTIA:
           if ( encoder.currentAcceleration < 0 and encoder.positionChange < 0) {
-            force += ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
-            Serial.print("force1: ");
-            Serial.print(force);
-            Serial.print(" currentAcceleration1: ");
-            Serial.println(encoder.currentAcceleration);
+            force += ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration))) * inertiaGainConfig;
           } else if ( encoder.currentAcceleration < 0 and encoder.positionChange > 0) {
-            force -= ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
-            Serial.print("force2: ");
-            Serial.print(force);
-            Serial.print(" currentAcceleration2: ");
-            Serial.println(encoder.currentAcceleration);
+            force -= ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration))) * inertiaGainConfig;
           }
-
-
-          //          if (encoder.currentAcceleration < 0 and encoder.positionChange > 0 ) {
-          //            force += ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
-          //          }
-          //          else if (encoder.currentAcceleration < 0 and encoder.positionChange < 0) {
-          //            force -= ConditionForceCalculator(effect, abs(NormalizeRange(encoder.currentAcceleration, encoder.maxAcceleration)));
-          ////          }
-          //          Serial.print("force: ");
-          //          Serial.print(force);
-          //          Serial.print(" currentAcceleration: ");
-          //          Serial.println(encoder.currentAcceleration);
           break;
         case USB_EFFECT_FRICTION:
           //          position change
           //          ReportPrint(effect);
-          force += ConditionForceCalculator(effect, NormalizeRange(encoder.positionChange, encoder.maxPositionChange) );
+          force += ConditionForceCalculator(effect, NormalizeRange(encoder.positionChange, encoder.maxPositionChange)) * frictionGainConfig;
           //                    Serial.println (encoder.positionChange);
           break;
         case USB_EFFECT_CUSTOM:
@@ -275,7 +266,7 @@ int32_t FfbEngine::ForceCalculator(Encoder encoder)
 
     }
   }
-
+  force = (uint32_t)( (float)1.00 * force * totalGainConfig / 10000); // each effect gain * total effect gain = 10000
   return constrain(force, -255, 255);
 }
 

@@ -30,6 +30,7 @@ void Wheel_::RecvFfbReport() {
 void Wheel_::begin(void) {
   // release all buttons
   ffbEngine.SetFfb(&HID().ffbReportHandler);
+  ffbEngine.SetGain(wheelConfig);
   encoder.setConfig(wheelConfig);
 
   end();

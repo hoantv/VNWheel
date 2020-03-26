@@ -19,6 +19,19 @@ class WheelConfig {
     bool configResetEncoderPosition;
     uint8_t controlMode;
     void SetDefault();
+    uint8_t constantGainConfig;
+    uint8_t rampGainConfig;
+    uint8_t squareGainConfig;
+    uint8_t sinGainConfig;
+    uint8_t triangleGainConfig;
+    uint8_t sawToothDownGainConfig;
+    uint8_t sawToothUpGainConfig;
+    uint8_t springGainConfig;
+    uint8_t damperGainConfig;
+    uint8_t inertiaGainConfig;
+    uint8_t frictionGainConfig;
+    uint8_t totalGainConfig;
+ 
 
 };
 

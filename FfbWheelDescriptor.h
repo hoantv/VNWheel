@@ -38,11 +38,11 @@ static const uint8_t _hidReportDescriptor[] PROGMEM = {
   // Button for Shifter
   0x05, 0x09, // USAGE_PAGE  (Button)
   0x19, 0x01, // USAGE_MINIMUM (Button 1)
-  0x29, 0x08, // USAGE_MAXIMUM (Button 8)
+  0x29, 0x10, // USAGE_MAXIMUM (Button 8)
   0x15, 0x00, // LOGICAL_MINIMUM (0)
   0x25, 0x01, // LOGICAL_MAXIMUM (1)
   0x75, 0x01, // REPORT_SIZE (1)
-  0x95, 0x08, // REPORT_COUNT (8)
+  0x95, 0x10, // REPORT_COUNT (8)
   0x81, 0x02, //INPUT (Data,Var,Abs)
 
   //6 Axis for steering wheel, accelerator, brake, clutch, handbrake and spare
