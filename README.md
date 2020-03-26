@@ -14,3 +14,10 @@ Usage:
 - pin 5,6 for Pulse/dir; PWM+-
 - Modify WheelConfig to match your hardware setup
 
+bool initialRun = true; => run 1st time for calculate maxPositionChange, maxVelocity, maxAcceleration. after that you can set to false and assign directly to these variables (uncomment codes)
+
+    Wheel.encoder.maxPositionChange = 1151;
+    Wheel.encoder.maxVelocity  = 72;
+    Wheel.encoder.maxAcceleration = 33;
+
+
