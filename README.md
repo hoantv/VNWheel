@@ -6,6 +6,9 @@ The code use some libraries and files from other projects like:
 - ForceFeedback-core-library
 - kaskus forums
 - microchip forums
+- filter
+
+https://github.com/MartinBloedorn/libFilter
 
 It has not tested yet.
 
@@ -19,5 +22,4 @@ bool initialRun = true; => run 1st time for calculate maxPositionChange, maxVelo
     Wheel.encoder.maxPositionChange = 1151;
     Wheel.encoder.maxVelocity  = 72;
     Wheel.encoder.maxAcceleration = 33;
-
 
