@@ -23,3 +23,9 @@ bool initialRun = true; => run 1st time for calculate maxPositionChange, maxVelo
     Wheel.encoder.maxVelocity  = 72;
     Wheel.encoder.maxAcceleration = 33;
 
+
+PS: stm32 version is in development phase:
+
+https://youtu.be/qPKXuQauSpo
+
+https://youtu.be/B8nHdp_dTPk
