@@ -53,7 +53,7 @@ void loop() {
     //        Serial.print(" maxAcceleration: ");
     //        Serial.println(Wheel.encoder.maxAcceleration);
     //        Serial.print("   maxPositionChange: ");
-    Serial.println(Wheel.encoder.currentPosition);
+//    Serial.println(Wheel.encoder.currentPosition);
 //    Wheel.encoder.maxPositionChange = 1151;
 //    Wheel.encoder.maxVelocity  = 72;
 //    Wheel.encoder.maxAcceleration = 33;
