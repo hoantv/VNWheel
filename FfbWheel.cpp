@@ -46,12 +46,12 @@ void Wheel_::write(void) {
 }
 
 
-void Wheel_::press(uint8_t b) {
+void Wheel_::press(uint16_t b) {
   _wheelReport.buttons |= (uint16_t)1 << (b - 1);
 }
 
 
-void Wheel_::release(uint8_t b) {
+void Wheel_::release(uint16_t b) {
   _wheelReport.buttons &= ~((uint16_t)1 << (b - 1));
 }
 
