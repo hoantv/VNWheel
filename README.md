@@ -14,7 +14,7 @@ It has not tested yet.
 
 Usage:
 - pin0,1,2 for encoder
-- pin 5,6 for Pulse/dir; PWM+-
+- pin 9, 10 for Pulse/dir; PWM+-
 - Modify WheelConfig to match your hardware setup
 
 bool initialRun = true; => run 1st time for calculate maxPositionChange, maxVelocity, maxAcceleration. after that you can set to false and assign directly to these variables (uncomment codes)
