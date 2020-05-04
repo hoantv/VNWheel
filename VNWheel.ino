@@ -16,7 +16,7 @@ double Setpoint, Input, Output;
 //double Kp=2, Ki=5, Kd=1;
 double Kp = 0.1 , Ki = 30 , Kd =  0;
 PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
-bool initialRun = true;
+bool initialRun = false;
 
 
 #include "PWM.h"
@@ -53,7 +53,7 @@ void loop() {
     //        Serial.print(" maxAcceleration: ");
     //        Serial.println(Wheel.encoder.maxAcceleration);
     //        Serial.print("   maxPositionChange: ");
-//    Serial.println(Wheel.encoder.currentPosition);
+    Serial.println(Wheel.encoder.currentPosition);
 //    Wheel.encoder.maxPositionChange = 1151;
 //    Wheel.encoder.maxVelocity  = 72;
 //    Wheel.encoder.maxAcceleration = 33;

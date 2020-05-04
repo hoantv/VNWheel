@@ -13,7 +13,7 @@ void WheelConfig::SetDefault() {
   // pointers to objects have to be deleted.
 
   configCPR = 1334;
-  //  configCPR = 10000;
+//    configCPR = 10000;
   configMaxAngle = (uint16_t) 900;
   configInverted = false;
   configUsePinZ = false;
