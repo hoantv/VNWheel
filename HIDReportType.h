@@ -41,7 +41,7 @@
 // ---- Input
 typedef struct
 { //WheelReport
-  uint8_t buttons = 0x00;
+  uint16_t buttons = 0x00;
   int16_t xAxis;
   int16_t yAxis;
   int16_t zAxis;
