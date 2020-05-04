@@ -16,7 +16,7 @@ double Setpoint, Input, Output;
 //double Kp=2, Ki=5, Kd=1;
 double Kp = 0.1 , Ki = 30 , Kd =  0;
 PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
-bool initialRun = false;
+bool initialRun = true;
 
 
 #include "PWM.h"
