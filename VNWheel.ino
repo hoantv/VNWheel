@@ -57,8 +57,6 @@ void loop() {
 //    Wheel.encoder.maxPositionChange = 1151;
 //    Wheel.encoder.maxVelocity  = 72;
 //    Wheel.encoder.maxAcceleration = 33;
-    Wheel.encoder.currentPosition ++;
-    Serial.println(Wheel.encoder.currentPosition ++);
     Wheel.encoder.updatePosition();
     if (Wheel.encoder.currentPosition > Wheel.encoder.maxValue) {
       Wheel.xAxis(32767);
