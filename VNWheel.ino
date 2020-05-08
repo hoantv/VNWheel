@@ -16,7 +16,7 @@ double Setpoint, Input, Output;
 //double Kp=2, Ki=5, Kd=1;
 double Kp = 0.1 , Ki = 30 , Kd =  0;
 PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
-bool initialRun = true;
+bool initialRun = false;
 
 
 #include "PWM.h"
@@ -57,7 +57,8 @@ void loop() {
 //    Wheel.encoder.maxPositionChange = 1151;
 //    Wheel.encoder.maxVelocity  = 72;
 //    Wheel.encoder.maxAcceleration = 33;
-
+    Wheel.encoder.currentPosition ++;
+    Serial.println(Wheel.encoder.currentPosition ++);
     Wheel.encoder.updatePosition();
     if (Wheel.encoder.currentPosition > Wheel.encoder.maxValue) {
       Wheel.xAxis(32767);

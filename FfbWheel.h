@@ -23,10 +23,10 @@ class Wheel_
     void begin(void);
     void end(void);
     void write(void);
-    void press(uint16_t b);
-    void release(uint16_t b);
+    void press(uint8_t b);
+    void release(uint8_t b);
     void releaseAll(void);
-    void buttons(uint16_t b);
+    void buttons(uint8_t b);
     void xAxis(int16_t a);
     void yAxis(int16_t a);
     void zAxis(int16_t a);

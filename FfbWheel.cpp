@@ -46,13 +46,13 @@ void Wheel_::write(void) {
 }
 
 
-void Wheel_::press(uint16_t b) {
-  _wheelReport.buttons |= (uint16_t)1 << (b - 1);
+void Wheel_::press(uint8_t b) {
+  _wheelReport.buttons |= (uint8_t)1 << (b - 1);
 }
 
 
-void Wheel_::release(uint16_t b) {
-  _wheelReport.buttons &= ~((uint16_t)1 << (b - 1));
+void Wheel_::release(uint8_t b) {
+  _wheelReport.buttons &= ~((uint8_t)1 << (b - 1));
 }
 
 
@@ -60,7 +60,7 @@ void Wheel_::releaseAll(void) {
   memset(&_wheelReport, 0x00, sizeof(_wheelReport));
 }
 
-void Wheel_::buttons(uint16_t b) {
+void Wheel_::buttons(uint8_t b) {
   _wheelReport.buttons = b;
 }
 
