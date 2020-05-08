@@ -16,7 +16,7 @@ double Setpoint, Input, Output;
 //double Kp=2, Ki=5, Kd=1;
 double Kp = 0.1 , Ki = 30 , Kd =  0;
 PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
-bool initialRun = false;
+bool initialRun = true;
 
 
 #include "PWM.h"
@@ -68,7 +68,7 @@ void loop() {
 
     Wheel.RecvFfbReport();
     Wheel.write();
-    total_force = Wheel.ffbEngine.ForceCalculator(Wheel.encoder);
+    total_force = Wheel.ffbEngine.ForceCalculator(Wheel.encoder);    
     total_force = constrain(total_force, -255, 255);
     //  Serial.println(Wheel.encoder.currentPosition);
     //  when reach max and min wheel range, max force to prevent wheel goes over.

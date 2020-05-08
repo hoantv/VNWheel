@@ -48,10 +48,12 @@ void FfbEngine::SetGain(WheelConfig wheelConfig) {
   triangleGainConfig = wheelConfig.triangleGainConfig;
   sawToothDownGainConfig = wheelConfig.sawToothDownGainConfig;
   sawToothUpGainConfig = wheelConfig.sawToothUpGainConfig;
+  springGainConfig =  wheelConfig.springGainConfig;
   damperGainConfig = wheelConfig.damperGainConfig;
   inertiaGainConfig = wheelConfig.inertiaGainConfig;
   frictionGainConfig = wheelConfig.frictionGainConfig;
   totalGainConfig = wheelConfig.totalGainConfig;
+
 }
 
 int32_t FfbEngine::ConstantForceCalculator(volatile TEffectState&  effect) {
@@ -171,13 +173,12 @@ int32_t FfbEngine::ConditionForceCalculator(volatile TEffectState&  effect, floa
     //    float tempForce = (metric - (float)1.00*(cpOffset - deadBand)/10000) * negativeCoefficient;
     tempForce = ((float)1.00 * (cpOffset - deadBand) / 10000 - metric) * negativeCoefficient;
     //    tempForce = (tempForce < negativeSaturation ? negativeSaturation : tempForce); I dont know why negativeSaturation = 55536.00 after negativeSaturation = -effect.negativeSaturation;
-    tempForce =   (tempForce < (-effect.negativeCoefficient) ? (-effect.negativeCoefficient) : tempForce);
+//    tempForce =   (tempForce < (-effect.negativeCoefficient) ? (-effect.negativeCoefficient) : tempForce);
   }
   else if (metric > (cpOffset + deadBand)) {
     tempForce = (metric - (float)1.00 * (cpOffset + deadBand) / 10000) * positiveCoefficient;
     tempForce = (tempForce > positiveSaturation ? positiveSaturation : tempForce);
   }
-  else return 0;
   tempForce = tempForce * effect.gain / 255;
   switch (effect.effectType) {
     case  USB_EFFECT_DAMPER:
@@ -192,7 +193,7 @@ int32_t FfbEngine::ConditionForceCalculator(volatile TEffectState&  effect, floa
     default:
       break;
   }
-  tempForce = map(tempForce, -10000, 10000, -255, 255);
+
   return (int32_t) tempForce;
 }
 
@@ -233,7 +234,6 @@ int32_t FfbEngine::ForceCalculator(Encoder encoder)
           break;
         case USB_EFFECT_SAWTOOTHDOWN:
           force += SawtoothDownForceCalculator(effect) * sawToothDownGainConfig;
-
           break;
         case USB_EFFECT_SAWTOOTHUP:
           force += SawtoothUpForceCalculator(effect) * sawToothUpGainConfig;
